@@ -559,12 +559,12 @@ int main(int argc, char **argv) {
     int i, fd;
 
     bool is_x1 = true, is_x2 = true;
-    uint32_t bus, dev, fct;
+    uint32_t bus, dev, fct, pci_domain;
     uint32_t size = 0x10000;
     uint32_t rflag = 0;
     uint32_t wflag = 0;
     uint32_t uflag = 0;
-    uint32_t bflag, dflag, fflag, sflag, fileflag = 0;
+    uint32_t pflag, bflag, dflag, fflag, sflag, fileflag = 0;
     char *filename = NULL;
     char pcicfgfile[100];
     int c;
@@ -575,7 +575,7 @@ int main(int argc, char **argv) {
         exit(1);
     }
 
-    while ((c = getopt(argc, argv, "rwub:d:f:o:i:l:s:")) != -1) {
+    while ((c = getopt(argc, argv, "rwub:d:f:o:i:l:s:p:")) != -1) {
         switch (c) {
             case 'r':
                 printf("Doing the reading\n");
@@ -588,6 +588,10 @@ int main(int argc, char **argv) {
             case 'u':
                 printf("Doing the upload\n");
                 uflag = 1;
+                break;
+            case 'p':
+                pflag = 1;
+                pci_domain = strtoul(optarg, NULL, 16); //hex numbers for size!!!
                 break;
             case 'b':
                 bflag = 1;
@@ -619,13 +623,14 @@ int main(int argc, char **argv) {
         }
     }
 
+    printf("pci_domain = %x \n", pci_domain);
     printf("bus = %x \n", bus);
     printf("dev = %x \n", dev);
     printf("fct = %x \n", fct);
     printf("fname = %s \n", filename);
 
-    sprintf(pcicfgfile, "/sys/bus/pci/devices/0000:%02x:%02x.%01x/config",
-            bus, dev, fct);
+    sprintf(pcicfgfile, "/sys/bus/pci/devices/%04x:%02x:%02x.%01x/config",
+            pci_domain, bus, dev, fct);
 
     fd = open(pcicfgfile, O_RDWR);
     if (fd < 0) {
